@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-// 1. Import your real screen files here so this file recognizes them
-import 'announcements/announcements_list_screen.dart';
-import '../reports/reports_list_screen.dart';
-import '../archive/archive_screen.dart';
+// Absolute package imports tell Dart exactly where to go from the root lib/ folder
+import 'package:barangay_bulletin/screens/announcements/announcements_list_screen.dart';
+import 'package:barangay_bulletin/screens/reports/reports_list_screen.dart';
+import 'package:barangay_bulletin/screens/archive/archive_screen.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -22,7 +22,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   ];
 
   // Map your tab names to update the AppBar title dynamically [cite: 33, 95]
-  final List<String> _titles = [
+  final List<String> _titles = [  
     'Barangay Announcements',
     'Community Reports',
     'Archived Bulletins',

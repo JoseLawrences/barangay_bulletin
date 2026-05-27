@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../models/announcement.dart';
-import 'announcement_detail_screen.dart';
-import 'announcement_form_screen.dart';
+import 'package:barangay_bulletin/models/announcement.dart';
+import 'package:barangay_bulletin/screens/announcements/announcement_details_screen.dart';
+import 'package:barangay_bulletin/screens/announcements/announcement_form_screen.dart';
 
 class AnnouncementsListScreen extends StatefulWidget {
   const AnnouncementsListScreen({super.key});
