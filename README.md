@@ -1,17 +1,20 @@
 # barangay_bulletin
 
-A new Flutter project.
+A offline community reporting and announcements app, Perfect for digital community integration.
 
-## Getting Started
+## Features
+- Local Persistence Later: Program runs on Hive and Hive Flutter, which allows offline-first data storage
+- State Management Architecture: Implemented using built-in 'setState' mechanics. and native state lifecycles to enforce strict state control boundaries.
+- Dynamic Local Queuries: Incorporates reactive 'ValueListenableBuilder' listeners for automated UI paint updates when underlying database objects change.
+- Soft-Delete Integrity Framework: Includes a way to delete entries but still have the option to restore upfront (ArchiveScreen).
 
-This project is a starting point for a Flutter application.
+### Setting up
 
-A few resources to get you started if this is your first Flutter project:
+- Step 1 - > Clone/Reolocate Project
+    Make sure project directory is loaded onto a file system
+- Step 2 -> Download Dependencies and Packages
+    Open VSCode's terminal and input the following:
+    ```bash
+    flutter clean
+    flutter pub get
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
