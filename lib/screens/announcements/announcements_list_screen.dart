@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:barangay_bulletin/models/announcement.dart';
 import 'package:barangay_bulletin/screens/announcements/announcement_details_screen.dart';
 import 'package:barangay_bulletin/screens/announcements/announcement_form_screen.dart';
+import 'package:barangay_bulletin/screens/archive/archive_screen.dart';
 
 class AnnouncementsListScreen extends StatefulWidget {
   const AnnouncementsListScreen({super.key});
@@ -18,10 +19,11 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // FIXED: Correctly returns the Scaffold directly without the stray "body:" label hanging around
     return Scaffold(
-      // 1. Category Filter Bar (Horizontal Chips)
       body: Column(
         children: [
+          // 1. Category Filter Bar (Horizontal Chips)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
             height: 60,
@@ -56,9 +58,15 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                 final allItems = box.values.toList();
 
                 // Apply PRD Filter Rules: Only non-deleted items matching active category
+                // Apply PRD Filter Rules: Convert the enum to a string name before comparing!
+                // Apply PRD Filter Rules: Only non-deleted items matching active category
                 var filteredItems = allItems.where((item) {
                   final isNotDeleted = !item.isDeleted;
-                  final matchesCategory = _selectedCategory == 'All' || item.category == _selectedCategory;
+                  
+                  // FIXED: Convert the enum object to its string name (e.g. 'info') before comparing with the chip text
+                  final matchesCategory = _selectedCategory == 'All' || 
+                      item.category.name.toLowerCase() == _selectedCategory.toLowerCase();
+                      
                   return isNotDeleted && matchesCategory;
                 }).toList();
 
@@ -97,11 +105,78 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                           fontWeight: announcement.isPinned ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
-                      subtitle: Text('$formattedDate\nCategory: ${announcement.category}'),
+                      subtitle: Text('$formattedDate\nCategory: ${announcement.category.name.toUpperCase()}'),
                       isThreeLine: true,
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (action) async {
+                          final box = Hive.box<Announcement>('announcements');
+
+                          if (action == 'edit') {
+                            final updatedAnnouncement = await Navigator.push<Announcement>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AnnouncementFormScreen(announcement: announcement),
+                              ),
+                            );
+
+                            if (updatedAnnouncement != null) {
+                              await box.put(updatedAnnouncement.id, updatedAnnouncement);
+                              await box.flush();
+                            }
+                          } else if (action == 'delete') {
+                            // ADDED: PRD Confirmation Dialog before soft-deleting
+                            final confirmDelete = await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Confirm Delete'),
+                                  content: const Text('Are you sure you want to move this announcement to the archive?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );  
+
+                            // Execute only if user taps 'Delete'
+                            if (confirmDelete == true) {
+                              setState(() {
+                                announcement.isDeleted = true;
+                              });
+                              await box.put(announcement.id, announcement);
+                              await box.flush();
+                            }
+                          }
+                        },
+                        itemBuilder: (BuildContext context) => [
+                          const PopupMenuItem<String>(
+                            value: 'edit',
+                            child: ListTile(
+                              leading: Icon(Icons.edit, color: Colors.orange),
+                              title: Text('Edit'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'delete',
+                            child: ListTile(
+                              leading: Icon(Icons.delete, color: Colors.red),
+                              title: Text('Delete'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
                       onTap: () {
-                        // Forward Data Passing Contract: Pass item to Detail screen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -121,19 +196,17 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
       // 3. FloatingActionButton to create a new Announcement
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Forward + Return Data Passing Contract: Wait for Form screen result
           final newAnnouncement = await Navigator.push<Announcement>(
             context,
             MaterialPageRoute(
-              builder: (context) => const AnnouncementFormScreen(announcement: null), // null = Create Mode
+              builder: (context) => const AnnouncementFormScreen(announcement: null),
             ),
           );
 
-          // Parent Screen explicitly handles writing to Hive box on successful return
           if (newAnnouncement != null) {
             final box = Hive.box<Announcement>('announcements');
             await box.put(newAnnouncement.id, newAnnouncement);
-            // ValueListenableBuilder automatically triggers UI update, no extra setState needed here!
+            await box.flush();
           }
         },
         child: const Icon(Icons.add),
